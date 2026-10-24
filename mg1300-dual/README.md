@@ -25,9 +25,9 @@ curl -fsSL https://raw.githubusercontent.com/euv7duv/mg1300-passwall/main/instal
 - Xray 类型：以上之外再加 **VLESS+XHTTP+REALITY**。
 - 不行：NaiveProxy（sing-box 自编版没 with_naive_outbound 标签）、SSR（没带 ssr-libev）。
 
-## 自启（默认关闭，是特性不是 bug）
+## 自启（本体默认关闭 + 中继钩子默认装，是特性不是 bug）
 
-opkg 装包时默认会把 PassWall 设为开机自启，且 luci-app-passwall 的 uci-defaults 会注册防火墙 include —— 在官固上，**光是装上、从未启用，重启后中继就断了**（真机实测）。所以 installer 收尾无条件 `disable` 两个服务。想要「开机自动连」又不伤中继，用包里 `extras/99-passwall-autostart`：拷到 `/etc/hotplug.d/iface/` 后，它等中继 wwan 起来、且 PassWall 主开关为开时才延迟 20 秒拉起 PassWall（中继先行、代理随后，真机终验通过）。删掉该文件即恢复全手动。
+opkg 装包时默认会把 PassWall 设为开机自启，且 luci-app-passwall 的 uci-defaults 会注册防火墙 include —— 在官固上，**光是装上、从未启用，重启后中继就断了**（真机实测）。所以 installer 收尾无条件 `disable` 两个服务；同时（installer v5.2 起）**默认把中继感知钩子装到 `/etc/hotplug.d/iface/99-passwall-autostart`**：它等中继 wwan 起来、且 PassWall 主开关为开时才延迟 20 秒拉起 PassWall（中继先行、代理随后，真机终验通过）。实际效果：用户只需在 LuCI 里启用一次 PassWall，之后每次重启都是中继先连、PassWall 随后自动起，全程不用手动。不想要自动：删掉该钩子文件即恢复全手动。
 
 ## geoview（组件页显示/「不适合当前设备」的真因）
 
@@ -48,6 +48,7 @@ geoview 官方的 linux-mipsle 版是**硬浮点**编译，MT7621 上一运行�
 7. **验证必须原样跑真脚本**：v1–v4 的缺陷全部由真机暴露，因为沙箱里只验过打桩逻辑，没原样执行过.run/一键。v5 发布前在高保真测试台（72MB tmpfs 冒充 /overlay + 按真实体积消耗的假 opkg）原样执行两条入口、三场景（全新/半装/真满）全过才发布；其中全新场景把.run 放在 /overlay 内运行 —— 自删若失效，空间检查必然误拦，场景本身就是探针。
 8. **脚本要有版本号横幅**：出过「用户那侧 CDN 边缘缓存还给旧脚本、新旧无从分辨」的事。v5 的 installer 与一键第一行都打印版本号。
 9. **GFW 模式下百度被 NXDOMAIN**（installer v5.1 / 一键 v5.2 追加）：真机发现开 GFW 列表模式时 www.baidu.com 被 ChinaDNS-NG 回 NXDOMAIN——它的 CNAME 目标 a.shifen.com 不在任何内置名单里，跨组判定把答案丢了。installer 收尾把 `baidu.com`、`shifen.com` 两行幂等写入用户直连名单 `/etc/passwall/rules/direct_host`（默认启用、优先级最高、只走直连 DNS），GFW 模式与百度从此共存；不需要这两行可装后自行删除。
+10. **中继钩子改默认装**（installer v5.2 / 一键 v5.3 追加）：钩子原先是 extras 里的可选件，要用户自己拷才生效；现 installer 收尾默认装到 `/etc/hotplug.d/iface/`，与作者真机配置一致——在 LuCI 启用一次 PassWall 后，重启即中继先行、PassWall 随后自动起。不需要自动启动删钩子文件即可。
 
 ## 占用
 

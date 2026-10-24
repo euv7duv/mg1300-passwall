@@ -1,5 +1,5 @@
 #!/bin/sh
-# One-click installer v5.2: PassWall v1 dual-core (sing-box + xray) for GL.iNet GL-MG1300 stock firmware 4.10.x.
+# One-click installer v5.3: PassWall v1 dual-core (sing-box + xray) for GL.iNet GL-MG1300 stock firmware 4.10.x.
 # Downloads the offline package (.tar.gz) from the GitHub release, verifies its
 # sha256, extracts it to /tmp (RAM), deletes the download for real, then runs
 # the extracted installer. The install itself is fully offline.
@@ -19,12 +19,12 @@
 
 FILE="passwall_26.10.16-dual_mipsel_24kc_openwrt-22.03-mg1300.tar.gz"
 URL="${PW_PKG_URL:-https://github.com/euv7duv/mg1300-passwall/releases/download/mg1300-dual-26.10.16/${FILE}}"
-SHA256="2c39336619a2662ef7ed171af666b9047b0363437c10bd81e59b75b7bb896657"
+SHA256="ee32546f4efd43756ec9a19156ba25b04e07beeee8559690d90e51f0832e3ba1"
 GEOVIEW_URL="${PW_GEOVIEW_URL:-https://github.com/euv7duv/mg1300-passwall/releases/download/mg1300-dual-26.10.16/geoview-softfloat-mipsle}"
 GEOVIEW_SHA256="dea7b3047bde2d7446a1a44bd4838bd46c44298e82cbceccb6ee05c973ec33ee"
 DEST="/root/${FILE}"
 
-echo "== PassWall v1 dual-core (sing-box + xray) for GL-MG1300 stock firmware - one-click v5.2 =="
+echo "== PassWall v1 dual-core (sing-box + xray) for GL-MG1300 stock firmware - one-click v5.3 =="
 
 if [ "$(id -u)" != "0" ]; then
 	echo "ABORT: run as root."

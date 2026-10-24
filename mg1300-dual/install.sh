@@ -1,5 +1,5 @@
 #!/bin/sh
-# PassWall v1 dual-core (sing-box + xray) offline installer v5.1 for GL.iNet GL-MG1300 stock firmware.
+# PassWall v1 dual-core (sing-box + xray) offline installer v5.2 for GL.iNet GL-MG1300 stock firmware.
 # Target: OpenWrt 22.03.4 / mipsel_24kc / kernel 5.10.176 (GL stock 4.10.x).
 # Everything installs from local ipks in this directory - no network, no opkg update.
 #
@@ -18,7 +18,7 @@ cd "$(dirname "$0")" || exit 1
 IPKDIR="."
 [ -d ./ipks ] && IPKDIR="./ipks"
 
-echo "== PassWall v1 dual-core (sing-box + xray) for GL-MG1300 stock firmware - installer v5.1 =="
+echo "== PassWall v1 dual-core (sing-box + xray) for GL-MG1300 stock firmware - installer v5.2 =="
 
 # --- platform guard ---
 . /etc/openwrt_release
@@ -126,6 +126,20 @@ inst "luci-i18n-passwall-zh-cn_*.ipk" luci-i18n-passwall-zh-cn
 # it, or installs the optional relay-aware hook from extras/ (see README).
 /etc/init.d/passwall disable 2>/dev/null
 /etc/init.d/passwall_server disable 2>/dev/null
+# Relay-aware autostart hook, installed by default (v5.2): PassWall's own
+# rc-autostart stays disabled (above), but this hotplug hook starts it once
+# the repeater (wwan) is up and its main switch is on - repeater first,
+# proxy second, no manual step after reboots (verified on a real MG1300).
+# Delete /etc/hotplug.d/iface/99-passwall-autostart to go back to manual.
+if [ -f ./extras/99-passwall-autostart ]; then
+	mkdir -p /etc/hotplug.d/iface 2>/dev/null
+	if cp ./extras/99-passwall-autostart /etc/hotplug.d/iface/99-passwall-autostart 2>/dev/null; then
+		chmod +x /etc/hotplug.d/iface/99-passwall-autostart 2>/dev/null
+		echo "Relay-aware autostart hook installed (PassWall follows the repeater at boot)."
+	else
+		echo "WARN: could not install the autostart hook (extras/99-passwall-autostart)."
+	fi
+fi
 # Baidu/GFW coexistence fix (2026-10-23, observed on a real MG1300): with the
 # GFW list enabled, ChinaDNS-NG returns NXDOMAIN for www.baidu.com - its
 # CNAME target a.shifen.com is in no built-in list, and the cross-group
@@ -151,9 +165,10 @@ if installed luci-app-passwall && [ -x /usr/bin/sing-box ] && [ -x /usr/bin/xray
 	echo "Open LuCI -> Services -> PassWall. Dual-core build: both the sing-box"
 	echo "and the xray core are installed - Sing-Box-type and Xray-type nodes"
 	echo "both work (XHTTP goes through the Xray type)."
-	echo "NOTE: PassWall autostart is OFF on purpose (relay-safe). It will not"
-	echo "start by itself at boot; enable it in LuCI when you want it, or add"
-	echo "the optional relay-aware autostart hook from the extras/ folder."
+	echo "NOTE: PassWall autostart is OFF on purpose (relay-safe), but the"
+	echo "relay-aware hook is installed: once you enable PassWall in LuCI, it"
+	echo "will come up by itself after the repeater at every boot. Delete"
+	echo "/etc/hotplug.d/iface/99-passwall-autostart for full manual control."
 else
 	echo "FINISHED WITH WARNINGS - check the WARN lines above."
 fi
