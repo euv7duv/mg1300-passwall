@@ -1,0 +1,17 @@
+#!/bin/sh
+# Optional relay-aware PassWall autostart for GL.iNet stock firmware.
+# The v5 installer disables PassWall's own autostart on purpose: on GL stock
+# firmware an unattended boot-time start can disturb the repeater. If you use
+# the router as a repeater AND want PassWall to come up on its own, install
+# this hook instead - it starts PassWall only after the repeater uplink
+# (wwan) is up, and only when PassWall's main switch is on:
+#
+#   cp 99-passwall-autostart /etc/hotplug.d/iface/
+#
+# Remove that file to go back to fully manual start.
+[ "$ACTION" = "ifup" ] || exit 0
+[ "$INTERFACE" = "wwan" ] || exit 0
+[ "$(uci -q get passwall.@global[0].enabled)" = "1" ] || exit 0
+pgrep -x xray >/dev/null 2>&1 && exit 0
+pgrep -x sing-box >/dev/null 2>&1 && exit 0
+(sleep 20; /etc/init.d/passwall start) &
